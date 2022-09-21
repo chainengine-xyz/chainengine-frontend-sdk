@@ -17,7 +17,7 @@ function createConfig(packageName) {
     sourcemap: true,
   };
 
-  const esbuildPlugin = esbuild({
+  const esBuildPlugin = esbuild({
     minify: true,
     tsconfig: './tsconfig.json',
     platform: 'browser',
@@ -30,51 +30,85 @@ function createConfig(packageName) {
   return [
     {
       input: './src/index.ts',
+      output: [{
+        ...sharedOutput,
+        dir: 'dist',
+        // file: './dist/index.js',
+        format: 'es',
+      }],
       plugins: [
-        minifyHtml(),
-        esbuildPlugin,
-      ],
-      output: [{ file: './dist/index.js', format: 'es', ...sharedOutput }],
-    },
-    {
-      input: './src/index.ts',
-      plugins: [
-        minifyHtml(),
-        // nodeResolve({ browser: true, preferBuiltins: true }),
+        json(),
         nodeResolve({
-          jsnext: true,
-          main: true,
-          module: true
+          browser: true,
         }),
         commonjs({
           transformMixedEsModules: true,
-          include: 'node_modules/**',
-          browser: true,
-          preferBuiltins: false,
-          ignoreGlobal: false,
-          sourceMap: false
+          include: /node_modules/,
+          extensions: ['.js', '.node']
         }),
-        globals(),
-        builtins(),
-        json(),
-        babel({
-          exclude: 'node_modules/**',
-          presets: [
-            ['@babel/preset-env', {useBuiltIns: 'entry', corejs: 3}]
+        nodePolyfills({
+          include: [
+            'events',
+            'https',
+            'http',
+            'url',
+            'zlib',
+            'path',
+            'os',
+            'stream',
+            'buffer',
+            'util',
           ]
         }),
-        esbuildPlugin,
-        nodePolyfills({
-          include: ['node_modules/**/*.js']
-        }),
+        minifyHtml(),
+        esBuildPlugin,
       ],
-      output: [{
-        file: './dist/index.umd.js',
-        format: 'umd',
-        inlineDynamicImports: true,
-        ...sharedOutput
-      }],
     },
+    // {
+    //   input: './src/index.ts',
+    //   output: [{
+    //     file: './dist/index.umd.js',
+    //     format: 'umd',
+    //     inlineDynamicImports: true,
+    //     ...sharedOutput
+    //   }],
+    //   plugins: [
+    //     minifyHtml(),
+    //     nodePolyfills({
+    //       include: [
+    //         'events',
+    //         'https',
+    //         'http',
+    //         'url',
+    //         'zlib',
+    //         'path',
+    //         'os',
+    //         'stream',
+    //         'buffer',
+    //         'util',
+    //         'assert'
+    //       ]
+    //     }),
+    //     nodeResolve({
+    //       jsnext: true,
+    //       main: true
+    //     }),
+    //     commonjs({
+    //       transformMixedEsModules: true,
+    //       include: /node_modules/,
+    //     }),
+    //     // globals(),
+    //     // builtins(),
+    //     json(),
+    //     // babel({
+    //     //   include: 'node_modules/**',
+    //     //   presets: [
+    //     //     ['@babel/preset-env', {useBuiltIns: 'entry', corejs: 3}]
+    //     //   ]
+    //     // }),
+    //     esBuildPlugin,
+    //   ],
+    // },
   ];
 }
 

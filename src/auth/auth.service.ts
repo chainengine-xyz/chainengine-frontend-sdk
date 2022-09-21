@@ -1,4 +1,8 @@
-import { NonceResponseDto, NonCustodialAuthRequestDto, CustodialAuthRequestDto } from './auth.dto';
+import {
+  NonCustodialAuthRequestDto,
+  CustodialAuthRequestDto,
+  NonceResponseDto,
+} from './auth.dto';
 import { apiRequest, Token } from '../utils/http';
 
 export class AuthService {

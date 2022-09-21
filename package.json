@@ -8,13 +8,22 @@
     "prepare": "npm run build",
     "build:clean": "rm -rf dist",
     "build:types": "tsc --emitDeclarationOnly",
-    "build:source": "rollup --silent --config rollup.config.js",
-    "build": "npm run build:clean; npm run build:types; npm run build:source",
+    "build:rollup": "rollup --silent --config rollup.config.js",
+    "build:source": "node --max-old-space-size=1500 ./node_modules/.bin/tsc",
+    "build": "npm run build:clean; npm run build:types; npm run build:rollup",
     "lint": "eslint 'src/**/*.{js,ts}'",
     "test": "jest",
-    "e2e": "npm run build && cd e2e && npm i && serve . -p 8080"
+    "e2e": "npm i; cd e2e; npm run start"
   },
   "license": "ISC",
+  "dependencies": {
+    "@coinbase/wallet-sdk": "^3.0.4",
+    "@toruslabs/torus-embed": "^1.36.1",
+    "@walletconnect/web3-provider": "^1.7.0",
+    "ethers": "5.5.4",
+    "walletlink": "2.5.0",
+    "web3modal": "1.9.5"
+  },
   "devDependencies": {
     "@babel/preset-env": "^7.19.1",
     "@rollup/plugin-commonjs": "^22.0.2",
@@ -66,11 +75,5 @@
     ],
     "coverageDirectory": "./coverage",
     "testEnvironment": "node"
-  },
-  "dependencies": {
-    "@coinbase/wallet-sdk": "^3.5.2",
-    "@walletconnect/web3-provider": "^1.8.0",
-    "ethers": "^5.7.1",
-    "web3modal": "^1.9.9"
   }
 }

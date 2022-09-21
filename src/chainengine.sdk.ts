@@ -2,7 +2,7 @@ import Web3Modal from 'web3modal';
 import { ethers } from 'ethers';
 
 import { AuthService } from './auth/auth.service';
-import { providerOptions } from './utils/providers';
+import { providers } from './utils/providers';
 
 export enum ApiMode {
   PROD = 'mainnet',
@@ -27,21 +27,33 @@ export class ChainEngineSdk {
 
   constructor(gameId: string) {
     this.gameId = gameId;
+
+    this.authService = new AuthService();
   }
 
   async authPlayer(): Promise<boolean> {
+    const providerOptions = await providers();
     await this.getNonce();
 
     const web3Modal = new Web3Modal({
-      cacheProvider: true,
+      cacheProvider: false,
       providerOptions,
     });
 
-    const provider = await web3Modal.connect();
-    const ethersProvider = new ethers.providers.Web3Provider(provider);
-    const signer = ethersProvider.getSigner();
+    // disconnect
+    await web3Modal.clearCachedProvider();
 
-    const result = await signer.signMessage(walletMessageBuilder(this.nonceToBeSigned, 'test'));
+    const instance = await web3Modal.connect();
+    const provider = new ethers.providers.Web3Provider(instance);
+    const accounts = await provider.listAccounts();
+    // const network = await provider.getNetwork();
+    const signer = provider.getSigner();
+
+    console.log(accounts[0]);
+
+    const result = await signer.signMessage(
+      walletMessageBuilder(this.nonceToBeSigned, 'test')
+    );
 
     console.log(result);
 

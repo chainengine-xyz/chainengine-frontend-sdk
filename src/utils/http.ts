@@ -25,7 +25,11 @@ export function apiUrl(path: string): string {
   return (process?.env?.API_URL ?? 'http://localhost:3000') + path;
 }
 
-export async function request<T>({ url, token, config }: FetchRequest): Promise<T> {
+export async function request<T>({
+  url,
+  token,
+  config,
+}: FetchRequest): Promise<T> {
   const headers = new Headers(config?.headers);
 
   if (token) {
@@ -47,7 +51,10 @@ export async function request<T>({ url, token, config }: FetchRequest): Promise<
   }
 
   if (!resp.ok) {
-    throw new APIError({ message: json?.message ?? json?.error, code: json?.status });
+    throw new APIError({
+      message: json?.message ?? json?.error,
+      code: json?.status,
+    });
   }
 
   return json;
@@ -64,6 +71,10 @@ export async function jsonRequest<T>(fetchRequest: FetchRequest): Promise<T> {
   return request<T>({ ...fetchRequest, config });
 }
 
-export async function apiRequest<T>({ url, token, config }: FetchRequest): Promise<T> {
+export async function apiRequest<T>({
+  url,
+  token,
+  config,
+}: FetchRequest): Promise<T> {
   return jsonRequest<T>({ url, token, config });
 }
