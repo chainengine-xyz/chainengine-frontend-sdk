@@ -1,0 +1,76 @@
+{
+  "name": "chainengine-sdk-front",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepare": "npm run build",
+    "build:clean": "rm -rf dist",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:source": "rollup --silent --config rollup.config.js",
+    "build": "npm run build:clean; npm run build:types; npm run build:source",
+    "lint": "eslint 'src/**/*.{js,ts}'",
+    "test": "jest",
+    "e2e": "npm run build && cd e2e && npm i && serve . -p 8080"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/preset-env": "^7.19.1",
+    "@rollup/plugin-commonjs": "^22.0.2",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^14.1.0",
+    "@types/jest": "^29.0.3",
+    "@types/node": "^18.7.18",
+    "@types/uuid": "^8.3.4",
+    "@typescript-eslint/eslint-plugin": "^5.38.0",
+    "@typescript-eslint/parser": "^5.38.0",
+    "esbuild": "^0.15.8",
+    "eslint": "^8.23.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-standard-with-typescript": "^23.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.5",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^6.0.1",
+    "jest": "^29.0.3",
+    "prettier": "^2.7.1",
+    "rollup": "^2.79.0",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-esbuild": "^4.10.1",
+    "rollup-plugin-minify-html-literals": "^1.2.6",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-polyfill-node": "^0.10.2",
+    "ts-jest": "^29.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.3",
+    "uuid": "^9.0.0"
+  },
+  "jest": {
+    "roots": [
+      "<rootDir>"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "ts"
+    ],
+    "testMatch": [
+      "<rootDir>/src/**/*.spec.ts"
+    ],
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "./coverage",
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@coinbase/wallet-sdk": "^3.5.2",
+    "@walletconnect/web3-provider": "^1.8.0",
+    "ethers": "^5.7.1",
+    "web3modal": "^1.9.9"
+  }
+}

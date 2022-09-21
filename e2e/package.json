@@ -1,0 +1,20 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chainengine-sdk-front": "file:..",
+    "express": "^4.18.1"
+  },
+  "devDependencies": {
+    "serve": "^14.0.1"
+  }
+}
