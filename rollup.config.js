@@ -1,11 +1,9 @@
 import minifyHtml from 'rollup-plugin-minify-html-literals';
 import nodePolyfills from 'rollup-plugin-polyfill-node';
+// eslint-disable-next-line import/no-named-as-default
 import nodeResolve from '@rollup/plugin-node-resolve';
-import builtins from 'rollup-plugin-node-builtins';
-import globals from 'rollup-plugin-node-globals';
 import commonjs from '@rollup/plugin-commonjs';
 import esbuild from 'rollup-plugin-esbuild';
-import babel from "rollup-plugin-babel";
 import json from '@rollup/plugin-json';
 
 import { name } from './package.json';
@@ -27,15 +25,22 @@ function createConfig(packageName) {
     },
   });
 
+  // https://rollupjs.org/guide/en/#outputdir
   return [
     {
       input: './src/index.ts',
-      output: [{
-        ...sharedOutput,
-        dir: 'dist',
-        // file: './dist/index.js',
-        format: 'es',
-      }],
+      output: [
+        {
+          ...sharedOutput,
+          dir: 'dist',
+        },
+        {
+          ...sharedOutput,
+          file: './dist/index.umd.js',
+          inlineDynamicImports: true,
+          format: 'umd',
+        },
+      ],
       plugins: [
         json(),
         nodeResolve({
@@ -44,7 +49,7 @@ function createConfig(packageName) {
         commonjs({
           transformMixedEsModules: true,
           include: /node_modules/,
-          extensions: ['.js', '.node']
+          extensions: ['.js', '.node'],
         }),
         nodePolyfills({
           include: [
@@ -58,57 +63,12 @@ function createConfig(packageName) {
             'stream',
             'buffer',
             'util',
-          ]
+          ],
         }),
-        minifyHtml(),
         esBuildPlugin,
+        minifyHtml(),
       ],
     },
-    // {
-    //   input: './src/index.ts',
-    //   output: [{
-    //     file: './dist/index.umd.js',
-    //     format: 'umd',
-    //     inlineDynamicImports: true,
-    //     ...sharedOutput
-    //   }],
-    //   plugins: [
-    //     minifyHtml(),
-    //     nodePolyfills({
-    //       include: [
-    //         'events',
-    //         'https',
-    //         'http',
-    //         'url',
-    //         'zlib',
-    //         'path',
-    //         'os',
-    //         'stream',
-    //         'buffer',
-    //         'util',
-    //         'assert'
-    //       ]
-    //     }),
-    //     nodeResolve({
-    //       jsnext: true,
-    //       main: true
-    //     }),
-    //     commonjs({
-    //       transformMixedEsModules: true,
-    //       include: /node_modules/,
-    //     }),
-    //     // globals(),
-    //     // builtins(),
-    //     json(),
-    //     // babel({
-    //     //   include: 'node_modules/**',
-    //     //   presets: [
-    //     //     ['@babel/preset-env', {useBuiltIns: 'entry', corejs: 3}]
-    //     //   ]
-    //     // }),
-    //     esBuildPlugin,
-    //   ],
-    // },
   ];
 }
 

@@ -1,3 +1,9 @@
+export interface IGameData {
+  id: string;
+  name: string;
+  description?: string;
+  image?: string;
+}
 export interface IOAuthUserMetadata {
   publicAddress?: string;
   phoneNumber?: string;
@@ -11,16 +17,18 @@ export class NonceRequestDto {
 
 export class NonceResponseDto {
   nonce: string;
+  message: string;
+  game: IGameData;
+  nonceSigned: boolean;
 }
 
-export declare class NonCustodialAuthRequestDto {
+export declare class AuthRequestDto {
   walletAddress: string;
   signature: string;
   nonce: string;
 }
 
-export declare class CustodialAuthRequestDto {
-  userMetadata: IOAuthUserMetadata;
-  idToken: string;
-  nonce: string;
+export class AuthResponseDto {
+  token?: string;
+  error?: string;
 }

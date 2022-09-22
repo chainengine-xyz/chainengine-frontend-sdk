@@ -1,8 +1,6 @@
-import Web3Modal from 'web3modal';
-import { ethers } from 'ethers';
-
-import { AuthService } from './auth/auth.service';
-import { providers } from './utils/providers';
+import { AuthService, NonceResponseDto } from './auth';
+import { WalletService } from './wallet';
+import { Token } from './utils/http';
 
 export enum ApiMode {
   PROD = 'mainnet',
@@ -10,61 +8,71 @@ export enum ApiMode {
 }
 
 export enum AuthProvider {
-  CUSTODIAL = 'custodial',
-  METAMASK = 'metamask',
-  COINBASE = 'coinbase',
-  WALLET_CONNECT = 'wallet-connect',
+  NONCUSTODIAL = 'noncustodial',
+  // FACEBOOK = 'facebook',
+  DISCORD = 'discord',
+  // TWITTER = 'twitter',
+  GOOGLE = 'google',
+  TWITCH = 'twitch',
 }
 
-const walletMessageBuilder = (nonce: string, gameName: string): string =>
-  `I'm signing my one-time nonce: ${nonce} to authenticate on the game ${gameName}.`;
-
 export class ChainEngineSdk {
+  private readonly walletService: WalletService;
   private readonly authService: AuthService;
-  private readonly gameId: string;
+  private readonly projectId: string;
 
-  private nonceToBeSigned: string;
+  private nonceData: NonceResponseDto;
+  private token: Token;
 
-  constructor(gameId: string) {
-    this.gameId = gameId;
+  constructor(projectId: string) {
+    this.projectId = projectId;
 
+    this.walletService = new WalletService();
     this.authService = new AuthService();
   }
 
-  async authPlayer(): Promise<boolean> {
-    const providerOptions = await providers();
+  async authPlayer(provider: AuthProvider): Promise<boolean> {
+    if (!!this.token) return true;
+
     await this.getNonce();
 
-    const web3Modal = new Web3Modal({
-      cacheProvider: false,
-      providerOptions,
+    if (provider === AuthProvider.NONCUSTODIAL) {
+      await this.walletService.connectNonCustodialWallet();
+    } else {
+      await this.walletService.connectCustodialWallet(provider as any);
+    }
+
+    const walletAddress = (await this.walletService.getAccount()) as string;
+
+    const { message, nonce } = this.nonceData;
+
+    const signature = await this.walletService.personalSign(message);
+
+    const result = await this.authService.postAuth({
+      walletAddress,
+      signature,
+      nonce,
     });
 
-    // disconnect
-    await web3Modal.clearCachedProvider();
+    if (result) {
+      console.log({ walletAddress, signature });
+      console.log({ token: result });
 
-    const instance = await web3Modal.connect();
-    const provider = new ethers.providers.Web3Provider(instance);
-    const accounts = await provider.listAccounts();
-    // const network = await provider.getNetwork();
-    const signer = provider.getSigner();
+      this.token = result;
 
-    console.log(accounts[0]);
-
-    const result = await signer.signMessage(
-      walletMessageBuilder(this.nonceToBeSigned, 'test')
-    );
-
-    console.log(result);
+      return true;
+    }
 
     return false;
   }
 
   private async getNonce(): Promise<void> {
-    if (this.nonceToBeSigned) return;
+    if (this.nonceData) return;
 
-    const { nonce } = await this.authService.getNonce(this.gameId);
-
-    this.nonceToBeSigned = nonce;
+    try {
+      this.nonceData = await this.authService.getNonce(this.projectId);
+    } catch (err) {
+      console.error(err);
+    }
   }
 }

@@ -1,1 +1,1 @@
-export { ChainEngineSdk } from './chainengine.sdk';
+export * from './chainengine.sdk';

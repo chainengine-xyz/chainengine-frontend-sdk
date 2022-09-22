@@ -1,8 +1,6 @@
-import {
-  NonCustodialAuthRequestDto,
-  CustodialAuthRequestDto,
-  NonceResponseDto,
-} from './auth.dto';
+import jwt from 'jsonwebtoken';
+
+import { NonceResponseDto, AuthRequestDto, AuthResponseDto } from './auth.dto';
 import { apiRequest, Token } from '../utils/http';
 
 export class AuthService {
@@ -16,23 +14,27 @@ export class AuthService {
     });
   }
 
-  postNonCustodialAuth(data: NonCustodialAuthRequestDto): Promise<Token> {
-    return apiRequest({
-      url: '/clientapp/auth',
-      config: {
-        method: 'POST',
-        body: JSON.stringify(data),
-      },
-    });
-  }
+  async postAuth(data: AuthRequestDto): Promise<Token | undefined> {
+    try {
+      const { token, error } = await apiRequest<AuthResponseDto>({
+        url: '/clientapp/auth',
+        config: {
+          method: 'POST',
+          body: JSON.stringify(data),
+        },
+      });
 
-  postCustodialAuth(data: CustodialAuthRequestDto): Promise<Token> {
-    return apiRequest({
-      url: '/clientapp/auth/oauth',
-      config: {
-        method: 'POST',
-        body: JSON.stringify(data),
-      },
-    });
+      if (!token) throw new Error(`Invalid token`);
+      if (error) throw new Error(error);
+
+      const result = jwt.decode(token) as Omit<Token, 'jwt'>;
+
+      return {
+        ...result,
+        jwt: token,
+      };
+    } catch (err) {
+      console.error(err);
+    }
   }
 }
