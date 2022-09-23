@@ -20,7 +20,7 @@ export class ChainEngineSdk {
 
   private nonceData: NonceResponseDto;
   private isProdMode: boolean;
-  private token: Token;
+  private token?: Token;
 
   constructor(projectId: string) {
     this.projectId = projectId;
@@ -61,6 +61,10 @@ export class ChainEngineSdk {
     }
 
     return false;
+  }
+
+  userLogout(): void {
+    this.token = undefined;
   }
 
   get ApiMode(): ApiMode {

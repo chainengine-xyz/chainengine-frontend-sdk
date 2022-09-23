@@ -3,7 +3,11 @@ import { ChainEngineSdk, AuthProvider } from '@chainengine-sdk/front-end';
 (async () => {
   const sdk = new ChainEngineSdk('1d07d1b4-ce89-43e4-80c6-4d9649cfb337');
 
-  await sdk.UserAuthentication(AuthProvider.NONCUSTODIAL);
+  const userIsAuthenticated = await sdk.UserAuthentication(
+    AuthProvider.NONCUSTODIAL
+  );
+
+  if (!userIsAuthenticated) return;
 
   console.log(await sdk.GetUserNft('c894fcaa-b7e4-4ee0-bf45-9980d3e358d2'));
 
