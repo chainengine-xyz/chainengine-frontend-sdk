@@ -1,5 +1,5 @@
 {
-  "name": "chainengine-sdk-front",
+  "name": "@chainengine-sdk/front-end",
   "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
@@ -9,7 +9,6 @@
     "build:clean": "rm -rf dist",
     "build:types": "tsc --emitDeclarationOnly",
     "build:rollup": "rollup --silent --config rollup.config.js",
-    "build:source": "node --max-old-space-size=1500 ./node_modules/.bin/tsc",
     "build": "npm run build:clean; npm run build:types; npm run build:rollup",
     "lint": "eslint 'src/**/*.{js,ts}'",
     "test": "jest",
