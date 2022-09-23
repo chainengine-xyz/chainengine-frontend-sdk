@@ -1,6 +1,7 @@
-interface FetchRequest {
+export interface FetchRequest {
   url: string;
   config?: RequestInit;
+  apiMode?: ApiMode;
   token?: Token;
 }
 
@@ -10,6 +11,11 @@ export interface Token {
   iat: number;
   exp: number;
   jwt: string;
+}
+
+export enum ApiMode {
+  PROD = 'mainnet',
+  TEST = 'testnet',
 }
 
 export class APIError extends Error {
@@ -29,11 +35,16 @@ export async function request<T>({
   url,
   token,
   config,
+  apiMode,
 }: FetchRequest): Promise<T> {
   const headers = new Headers(config?.headers);
 
   if (token) {
     headers.set('Authorization', `Bearer ${token.jwt}`);
+  }
+
+  if (apiMode) {
+    headers.set('api-mode', apiMode);
   }
 
   const resp = await fetch(apiUrl(url), {
@@ -75,6 +86,7 @@ export async function apiRequest<T>({
   url,
   token,
   config,
+  apiMode,
 }: FetchRequest): Promise<T> {
-  return jsonRequest<T>({ url, token, config });
+  return jsonRequest<T>({ url, token, config, apiMode });
 }

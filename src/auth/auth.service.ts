@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 import { NonceResponseDto, AuthRequestDto, AuthResponseDto } from './auth.dto';
-import { apiRequest, Token } from '../utils/http';
+import { apiRequest, Token } from '../utils';
 
 export class AuthService {
   getNonce(gameId: string): Promise<NonceResponseDto> {

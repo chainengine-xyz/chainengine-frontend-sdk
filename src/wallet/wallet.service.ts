@@ -5,6 +5,7 @@ import Web3Modal from 'web3modal';
 import { Magic } from 'magic-sdk';
 import { ethers } from 'ethers';
 
+import { SignedTransactionDataResponseDto } from '../nft';
 import { providers } from './providers';
 
 const { MAGIC_LINK_API_KEY } = process.env;
@@ -96,6 +97,62 @@ export class WalletService {
     } catch (err) {
       console.error(err);
     }
+  }
+
+  async signTypedData(
+    transaction: SignedTransactionDataResponseDto
+  ): Promise<string> {
+    const signer = this.provider.getSigner();
+    const { from: transactionFrom } = transaction;
+    const from = await signer.getAddress();
+
+    if (transactionFrom.toLowerCase() !== from?.toLowerCase()) {
+      throw new Error(
+        `The wallet address on the request is different from your wallet address`
+      );
+    }
+
+    const { domain, types, message } = this.getTypedDataMessage(transaction);
+
+    const result = await signer._signTypedData(domain, types, message);
+
+    return result;
+  }
+
+  private getTypedDataMessage({
+    domain,
+    from,
+    nft,
+    value,
+    gas,
+    nonce,
+    data,
+  }: SignedTransactionDataResponseDto) {
+    const types = {
+      ForwardRequest: [
+        { name: 'from', type: 'address' },
+        { name: 'to', type: 'address' },
+        { name: 'value', type: 'uint256' },
+        { name: 'gas', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' },
+        { name: 'data', type: 'bytes' },
+      ],
+    };
+
+    const message = {
+      from,
+      to: nft.contractAddress,
+      value,
+      gas,
+      nonce,
+      data,
+    };
+
+    return {
+      message,
+      types,
+      domain,
+    };
   }
 
   private async redirectResult() {

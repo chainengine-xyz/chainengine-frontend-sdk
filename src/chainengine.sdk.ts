@@ -1,11 +1,7 @@
 import { AuthService, NonceResponseDto } from './auth';
 import { WalletService } from './wallet';
-import { Token } from './utils/http';
-
-export enum ApiMode {
-  PROD = 'mainnet',
-  TEST = 'testnet',
-}
+import { NftResponseDto, NftService, SignedTransactionRequestDto } from './nft';
+import { ApiMode, Token } from './utils';
 
 export enum AuthProvider {
   NONCUSTODIAL = 'noncustodial',
@@ -20,18 +16,22 @@ export class ChainEngineSdk {
   private readonly walletService: WalletService;
   private readonly authService: AuthService;
   private readonly projectId: string;
+  private nftService: NftService;
 
   private nonceData: NonceResponseDto;
+  private isProdMode: boolean;
   private token: Token;
 
   constructor(projectId: string) {
     this.projectId = projectId;
+    this.isProdMode = false;
 
     this.walletService = new WalletService();
     this.authService = new AuthService();
+    this.nftService = new NftService();
   }
 
-  async authPlayer(provider: AuthProvider): Promise<boolean> {
+  async UserAuthentication(provider: AuthProvider): Promise<boolean> {
     if (!!this.token) return true;
 
     await this.getNonce();
@@ -55,15 +55,50 @@ export class ChainEngineSdk {
     });
 
     if (result) {
-      console.log({ walletAddress, signature });
-      console.log({ token: result });
-
       this.token = result;
 
       return true;
     }
 
     return false;
+  }
+
+  get ApiMode(): ApiMode {
+    return this.isProdMode ? ApiMode.PROD : ApiMode.TEST;
+  }
+
+  SetTestNetMode() {
+    this.isProdMode = false;
+    this.switchApiMode();
+  }
+
+  SetMainNetMode() {
+    this.isProdMode = true;
+    this.switchApiMode();
+  }
+
+  async GetUserNft(nftId: string): Promise<NftResponseDto | undefined> {
+    try {
+      if (!this.token) throw new Error('User is not authenticated');
+
+      return this.nftService.getById(nftId, this.token);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async TransferNft(data: SignedTransactionRequestDto) {
+    try {
+      if (!this.token) throw new Error('User is not authenticated');
+
+      const transfer = await this.nftService.transfer(data, this.token);
+
+      const signature = await this.walletService.signTypedData(transfer);
+
+      await this.nftService.signTransfer(transfer.id, signature, this.token);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   private async getNonce(): Promise<void> {
@@ -74,5 +109,9 @@ export class ChainEngineSdk {
     } catch (err) {
       console.error(err);
     }
+  }
+
+  private switchApiMode() {
+    this.nftService = new NftService(this.ApiMode);
   }
 }
