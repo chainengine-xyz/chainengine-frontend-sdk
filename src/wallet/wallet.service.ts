@@ -1,22 +1,17 @@
 // eslint-disable-next-line import/named
-import { SDKBase, InstanceWithExtensions } from '@magic-sdk/provider';
 import { OAuthExtension } from '@magic-ext/oauth';
-import Web3Modal from 'web3modal';
-import { Magic } from 'magic-sdk';
+import { InstanceWithExtensions, SDKBase } from '@magic-sdk/provider';
 import { ethers } from 'ethers';
+import { Magic, MagicUserMetadata } from 'magic-sdk';
+import Web3Modal from 'web3modal';
 
+import { AuthContext } from '../AuthContext';
 import { SignedTransactionDataResponseDto } from '../nft';
+import Deferred from '../utils/deferred';
 import { providers } from './providers';
+import { IWalletInfo, NoncustodialProviders } from './types';
 
 const { MAGIC_LINK_API_KEY } = process.env;
-
-enum OAuthProvider {
-  FACEBOOK = 'facebook',
-  DISCORD = 'discord',
-  TWITTER = 'twitter',
-  GOOGLE = 'google',
-  TWITCH = 'twitch',
-}
 
 export class WalletService {
   private readonly magic: InstanceWithExtensions<SDKBase, OAuthExtension[]>;
@@ -27,7 +22,6 @@ export class WalletService {
 
   constructor() {
     const providerOptions = providers();
-    window?.localStorage?.clear?.();
 
     this.magic = new Magic(MAGIC_LINK_API_KEY as string, {
       locale: 'en_US',
@@ -42,33 +36,75 @@ export class WalletService {
     this.redirectURI = this.redirectURIBuilder();
   }
 
-  async connectNonCustodialWallet() {
-    await this.redirectResult();
-
-    if (this.provider) return;
-
+  async connectMetamaskWallet(): Promise<IWalletInfo> {
     try {
-      const instance = await this.web3Modal.connect();
-      this.provider = new ethers.providers.Web3Provider(instance);
+      const pendingProvider = new ethers.providers.Web3Provider(
+        (window as any).ethereum
+      );
+      await pendingProvider.send('eth_requestAccounts', []);
+      this.provider = pendingProvider;
+
+      // No extra information for wallet infor for Metamask provider
+      return {};
     } catch (err) {
       console.error(err);
+      throw err;
     }
   }
 
-  async connectCustodialWallet(provider: OAuthProvider) {
-    await this.redirectResult();
+  async connectMagicLinkWallet(
+    selectedProvider: NoncustodialProviders
+  ): Promise<IWalletInfo> {
+    // Using deferred as magic.loginWithRedirct resolves before redirecting.
+    // That way we can be sure that the execution is not going beyond until redirect
+    const deferred = new Deferred<IWalletInfo>();
 
-    if (this.provider) return;
-
-    try {
-      await this.handleLoginWithRedirect(provider);
+    // We're using a storage control flag to check the pending oath redirect
+    if (AuthContext.getPendingAuth() === selectedProvider) {
+      await this.magic.oauth
+        .getRedirectResult()
+        .then(async () => {
+          this.provider = new ethers.providers.Web3Provider(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            this.magic.rpcProvider as any
+          );
+          const meta: MagicUserMetadata = await this.magic.user.getMetadata();
+          deferred.resolve({
+            email: meta.email,
+            phoneNumber: meta.phoneNumber,
+          });
+        })
+        .catch((e) => {
+          console.error('Error while authenticating');
+          deferred.reject(e);
+        })
+        .finally(() => {
+          AuthContext.removePendingAuth();
+        });
+    } else if (selectedProvider === AuthContext.getPlayer()?.authProvider) {
       this.provider = new ethers.providers.Web3Provider(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.magic.rpcProvider as any
       );
-    } catch (err) {
-      console.error(err);
+
+      const meta: MagicUserMetadata = await this.magic.user.getMetadata();
+      deferred.resolve({
+        email: meta.email,
+        phoneNumber: meta.phoneNumber,
+      });
+    } else {
+      AuthContext.setPendingAuth(selectedProvider);
+      await this.magic.oauth
+        .loginWithRedirect({
+          redirectURI: this.redirectURI,
+          provider: selectedProvider,
+        })
+        .catch(() => {
+          AuthContext.removePendingAuth;
+        });
     }
+
+    return deferred.promise;
   }
 
   async personalSign(message: string): Promise<string> {
@@ -79,14 +115,9 @@ export class WalletService {
     return result;
   }
 
-  async getAccount(): Promise<string | undefined> {
-    try {
-      const accounts = await this.provider.listAccounts();
-
-      return accounts[0];
-    } catch (err) {
-      console.error(err);
-    }
+  async getAccount(): Promise<string> {
+    const accounts = await this.provider.listAccounts();
+    return accounts[0];
   }
 
   async getNetwork(): Promise<ethers.providers.Network | undefined> {
@@ -153,30 +184,6 @@ export class WalletService {
       types,
       domain,
     };
-  }
-
-  private async redirectResult() {
-    if (!window.location.search) return;
-
-    try {
-      await this.magic.oauth.getRedirectResult();
-
-      this.provider = new ethers.providers.Web3Provider(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.magic.rpcProvider as any
-      );
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  private async handleLoginWithRedirect(
-    provider: OAuthProvider
-  ): Promise<void> {
-    await this.magic.oauth.loginWithRedirect({
-      redirectURI: this.redirectURI,
-      provider,
-    });
   }
 
   private redirectURIBuilder(url = ''): string {

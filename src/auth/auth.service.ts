@@ -14,27 +14,23 @@ export class AuthService {
     });
   }
 
-  async postAuth(data: AuthRequestDto): Promise<Token | undefined> {
-    try {
-      const { token, error } = await apiRequest<AuthResponseDto>({
-        url: '/clientapp/auth',
-        config: {
-          method: 'POST',
-          body: JSON.stringify(data),
-        },
-      });
+  async postAuth(data: AuthRequestDto): Promise<Token> {
+    const { token, error } = await apiRequest<AuthResponseDto>({
+      url: '/clientapp/auth',
+      config: {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+    });
 
-      if (!token) throw new Error(`Invalid token`);
-      if (error) throw new Error(error);
+    if (!token) throw new Error(`Invalid token`);
+    if (error) throw new Error(error);
 
-      const result = jwt.decode(token) as Omit<Token, 'jwt'>;
+    const result = jwt.decode(token) as Omit<Token, 'jwt'>;
 
-      return {
-        ...result,
-        jwt: token,
-      };
-    } catch (err) {
-      console.error(err);
-    }
+    return {
+      ...result,
+      jwt: token,
+    };
   }
 }

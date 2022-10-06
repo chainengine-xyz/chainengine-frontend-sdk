@@ -1,121 +1,54 @@
-import { AuthService, NonceResponseDto } from './auth';
+import { AuthService } from './auth';
+import { AuthContext } from './AuthContext';
+import { ConfigContext } from './ConfigContext';
+import { Marketplace } from './marketplace';
+import { MarketplaceService } from './marketplace/marketplace.service';
+import { NFT, NftService } from './nft';
+import { ApiMode } from './utils';
 import { WalletService } from './wallet';
-import { NftResponseDto, NftService, SignedTransactionRequestDto } from './nft';
-import { ApiMode, Token } from './utils';
+import { CustodianProviders, NoncustodialProviders } from './wallet/types';
+import { Wallet } from './wallet/wallet';
 
-export enum AuthProvider {
-  NONCUSTODIAL = 'noncustodial',
-  // FACEBOOK = 'facebook',
-  DISCORD = 'discord',
-  // TWITTER = 'twitter',
-  GOOGLE = 'google',
-  TWITCH = 'twitch',
-}
+export const AuthProviders = {
+  Noncustodial: NoncustodialProviders,
+  Custodian: CustodianProviders,
+};
 
 export class ChainEngineSdk {
-  private readonly walletService: WalletService;
-  private readonly authService: AuthService;
-  private readonly projectId: string;
-  private nftService: NftService;
+  public readonly nft: NFT;
+  public readonly wallet: Wallet;
+  public readonly marketplace: Marketplace;
 
-  private nonceData: NonceResponseDto;
-  private isProdMode: boolean;
-  private token?: Token;
+  constructor(projectId: string, apiMode: ApiMode = ApiMode.TEST) {
+    ConfigContext.setApiMode(apiMode);
 
-  constructor(projectId: string) {
-    this.projectId = projectId;
-    this.isProdMode = false;
+    const walletService = new WalletService();
+    const authService = new AuthService();
+    const nftService = new NftService();
+    const marketplaceService = new MarketplaceService();
 
-    this.walletService = new WalletService();
-    this.authService = new AuthService();
-    this.nftService = new NftService();
+    this.nft = new NFT(projectId, nftService, walletService);
+    this.wallet = new Wallet(projectId, authService, walletService);
+    this.marketplace = new Marketplace(projectId, marketplaceService);
   }
 
-  async UserAuthentication(provider: AuthProvider): Promise<boolean> {
-    if (!!this.token) return true;
-
-    await this.getNonce();
-
-    if (provider === AuthProvider.NONCUSTODIAL) {
-      await this.walletService.connectNonCustodialWallet();
-    } else {
-      await this.walletService.connectCustodialWallet(provider as any);
-    }
-
-    const walletAddress = (await this.walletService.getAccount()) as string;
-
-    const { message, nonce } = this.nonceData;
-
-    const signature = await this.walletService.personalSign(message);
-
-    const result = await this.authService.postAuth({
-      walletAddress,
-      signature,
-      nonce,
-    });
-
-    if (result) {
-      this.token = result;
-
-      return true;
-    }
-
-    return false;
+  public isAuthenticatedOrPending() {
+    return !!AuthContext.getPlayer() || !!AuthContext.getPendingAuth();
   }
 
   userLogout(): void {
-    this.token = undefined;
+    AuthContext.clean();
   }
 
-  get ApiMode(): ApiMode {
-    return this.isProdMode ? ApiMode.PROD : ApiMode.TEST;
+  public get ApiMode(): ApiMode {
+    return ConfigContext.getApiMode();
   }
 
-  SetTestNetMode() {
-    this.isProdMode = false;
-    this.switchApiMode();
+  public set setApiMode(apiMode: ApiMode) {
+    ConfigContext.setApiMode(apiMode);
   }
 
-  SetMainNetMode() {
-    this.isProdMode = true;
-    this.switchApiMode();
-  }
-
-  async GetUserNft(nftId: string): Promise<NftResponseDto | undefined> {
-    try {
-      if (!this.token) throw new Error('User is not authenticated');
-
-      return this.nftService.getById(nftId, this.token);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  async TransferNft(data: SignedTransactionRequestDto) {
-    try {
-      if (!this.token) throw new Error('User is not authenticated');
-
-      const transfer = await this.nftService.transfer(data, this.token);
-
-      const signature = await this.walletService.signTypedData(transfer);
-
-      await this.nftService.signTransfer(transfer.id, signature, this.token);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  private async getNonce(): Promise<void> {
-    if (this.nonceData) return;
-
-    try {
-      this.nonceData = await this.authService.getNonce(this.projectId);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  private switchApiMode() {
-    this.nftService = new NftService(this.ApiMode);
+  public set witchApiMode(apiMode: ApiMode) {
+    ConfigContext.setApiMode(apiMode);
   }
 }

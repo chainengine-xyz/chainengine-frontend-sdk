@@ -5,6 +5,7 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import esbuild from 'rollup-plugin-esbuild';
 import json from '@rollup/plugin-json';
+import image from '@rollup/plugin-image';
 
 import { name } from './package.json';
 
@@ -67,6 +68,7 @@ function createConfig(packageName) {
         }),
         esBuildPlugin,
         minifyHtml(),
+        image({ dom: true }),
       ],
     },
   ];

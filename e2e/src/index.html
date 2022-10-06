@@ -1,17 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  <script type="module" src="index.ts"></script>
-  <!-- <script type="module" src="index.js"></script> -->
-  <!-- <script type="module">
-    const sdk = ChainEngineSdk('1d07d1b4-ce89-43e4-80c6-4d9649cfb337');
-    sdk.authPlayer()
-  </script> -->
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script type="module" src="index.ts"></script>
+    <style>
+      button {
+        padding: 10px;
+      }
+    </style>
+    <section style="padding: 8px 16px">
+      <h2>Wallet</h2>
+      <div style="display: flex; flex-direction: column">
+        <button id="connectButton">Connect</button>
+        <button id="isUserAuthenticated" style="margin-top: 18px">
+          Is user Authenticated
+        </button>
+        <button id="logout">Logout</button>
+        <button id="walletInfo">Get Wallet Info</button>
+      </div>
+      <span>Result: </span><span id="resultWallet"></span>
+    </section>
+    <section style="padding: 8px 16px"></section>
+    <section style="padding: 8px 16px">
+      <h2>NFT</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; gap: 12px">
+          <input id="nftIdGetSingleNft" placeholder="Nft ID" type="text" />
+          <button id="getSingleNftButton">Get single NFT</button>
+        </div>
+        <button id="getAllNftsButton">Get all NFTs</button>
+        <div style="display: flex; gap: 12px">
+          <input id="nftIdTransferNft" placeholder="NFT Id" type="text" />
+          <input
+            id="destinationAddressTransferNft"
+            placeholder="Destination Address"
+            type="text"
+          />
+          <input id="amountTransferNft" placeholder="Amount" type="text" />
+          <button id="transferNftButton">Transfer NFT</button>
+        </div>
+
+        <span>Result: </span><span id="resultNft"></span>
+      </div>
+    </section>
+    <section style="padding: 8px 16px">
+      <h2>Marketplace</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <button id="getListingsButton" style="flex: 1">Get Listings</button>
+        <!-- <button id="getMyListingsButton" style="flex: 1">
+          Get My Listings
+        </button>
+        <button id="buyButton" style="flex: 1">Buy</button> -->
+        <span>Result: </span><span id="resultMarketplace"></span>
+      </div>
+    </section>
+  </body>
 </html>
