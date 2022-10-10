@@ -12,14 +12,14 @@ export abstract class ConfigContext {
     matic: {
       key: 'matic',
       aliases: 'Polygon',
-      providerUrl: 'https://polygon-mainnet.g.alchemy.com/v2/',
+      providerUrl: process.env.MATIC_PROVIDER_URL!,
       chainId: 137,
       isTest: false,
     },
     maticmum: {
       key: 'maticmum',
       aliases: 'Mumbai',
-      providerUrl: 'https://polygon-mumbai.g.alchemy.com/v2/',
+      providerUrl: process.env.MATICMUM_PROVIDER_URL!,
       chainId: 80001,
       isTest: true,
     },
