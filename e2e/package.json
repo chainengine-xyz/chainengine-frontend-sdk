@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@chainengine-sdk/front-end": "file:.."
+    "chainengine-frontend-sdk": "file:.."
   },
   "devDependencies": {
     "@babel/cli": "^7.17.10",

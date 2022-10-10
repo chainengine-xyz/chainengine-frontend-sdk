@@ -1,7 +1,8 @@
 import { AuthService, NonceResponseDto } from '../auth';
 import { AuthContext } from '../AuthContext';
+import { ApiMode } from '../chainengine.sdk';
+import { ConfigContext } from '../config/ConfigContext';
 import { Token } from '../utils';
-import Deferred from '../utils/deferred';
 import { renderSelectProviderModal } from './selectProviderModal';
 import {
   AvailableAuthProviders,
@@ -78,17 +79,64 @@ export class Wallet {
     }
   }
 
+  public getApiMode(): ApiMode {
+    return ConfigContext.getApiMode();
+  }
+
+  // public setApiMode(apiMode: ApiMode) {
+  //   if (ConfigContext.getApiMode() === apiMode) {
+  //     return;
+  //   }
+
+  //   return this.toggleApiMode();
+  // }
+
+  // public async toggleApiMode(): Promise<void> {
+  //   const newApiMode =
+  //     ConfigContext.getApiMode() === ApiMode.PROD ? ApiMode.TEST : ApiMode.PROD;
+
+  //   const newNetwork =
+  //     ConfigContext.getApiMode() === ApiMode.PROD
+  //       ? ConfigContext.NETWORKS.maticmum
+  //       : ConfigContext.NETWORKS.matic;
+
+  //   const currentAuthProvider = AuthContext.getPlayer().authProvider;
+  //   const isNoncustodial =
+  //     !!NoncustodialProviders[currentAuthProvider.toUpperCase()];
+
+  //   // Change network for Magic auth means that the process of authentication must be done again
+  //   // Magic does not support change network
+  //   if (isNoncustodial) {
+  //     await this.walletService.changeMagiclinkNetwork(newNetwork);
+  //     const currentAuthProvider: NoncustodialProviders = AuthContext.getPlayer()
+  //       .authProvider as NoncustodialProviders;
+
+  //     ConfigContext.setApiMode(newApiMode);
+  //     this.logout();
+
+  //     await this.walletService.connectMagicLinkWallet(currentAuthProvider);
+  //   } else {
+  //     await this.walletService.requestMetamaskChangeNetwork(newNetwork);
+  //     ConfigContext.setApiMode(newApiMode);
+  //   }
+  // }
+
+  // TODO: More actions to be done
+  logout(): void {
+    AuthContext.clean();
+  }
+
   public getInfo() {
     return AuthContext.getPlayer();
   }
 
-  public getBalance() {
-    throw new Error('To be implemented');
-  }
+  // public getBalance() {
+  //   throw new Error('To be implemented');
+  // }
 
-  public signMessage() {
-    throw new Error('To be implemented');
-  }
+  // public signMessage() {
+  //   throw new Error('To be implemented');
+  // }
 
   private async getNonce(): Promise<NonceResponseDto> {
     return this.authService.getNonce(this.projectId);

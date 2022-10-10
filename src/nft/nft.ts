@@ -28,6 +28,7 @@ export class NFT {
       throw err;
     }
   }
+
   getAll() {
     if (!AuthContext.isAuthenticated()) {
       throw new Error('User is not authenticated');
@@ -48,10 +49,11 @@ export class NFT {
 
     return this.nftService.signTransfer(transfer.id, signature);
   }
-  getHistory(nftId: string) {
-    throw new Error('To be implemented');
-  }
-  burn(nftId: string) {
-    throw new Error('To be implemented');
-  }
+
+  // getHistory(nftId: string) {
+  //   throw new Error('To be implemented');
+  // }
+  // burn(nftId: string) {
+  //   throw new Error('To be implemented');
+  // }
 }

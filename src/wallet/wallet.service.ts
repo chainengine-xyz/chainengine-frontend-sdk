@@ -3,34 +3,36 @@ import { OAuthExtension } from '@magic-ext/oauth';
 import { InstanceWithExtensions, SDKBase } from '@magic-sdk/provider';
 import { ethers } from 'ethers';
 import { Magic, MagicUserMetadata } from 'magic-sdk';
-import Web3Modal from 'web3modal';
 
 import { AuthContext } from '../AuthContext';
+import { ApiMode } from '../chainengine.sdk';
+import { ConfigContext } from '../config/ConfigContext';
 import { SignedTransactionDataResponseDto } from '../nft';
+import { INetwork } from '../types/INetworks';
 import Deferred from '../utils/deferred';
-import { providers } from './providers';
 import { IWalletInfo, NoncustodialProviders } from './types';
 
-const { MAGIC_LINK_API_KEY } = process.env;
+const MAGIC_LINK_API_KEY = 'pk_live_1534D203F16FD961';
 
 export class WalletService {
-  private readonly magic: InstanceWithExtensions<SDKBase, OAuthExtension[]>;
-  private readonly web3Modal: Web3Modal;
+  private magic: InstanceWithExtensions<SDKBase, OAuthExtension[]>;
   private readonly redirectURI: string;
 
   private provider: ethers.providers.Web3Provider;
 
   constructor() {
-    const providerOptions = providers();
+    const network =
+      ConfigContext.getApiMode() === ApiMode.PROD
+        ? ConfigContext.NETWORKS.matic
+        : ConfigContext.NETWORKS.maticmum;
 
     this.magic = new Magic(MAGIC_LINK_API_KEY as string, {
       locale: 'en_US',
+      network: {
+        rpcUrl: network.providerUrl,
+        chainId: network.chainId,
+      },
       extensions: [new OAuthExtension()],
-    });
-
-    this.web3Modal = new Web3Modal({
-      cacheProvider: false,
-      providerOptions,
     });
 
     this.redirectURI = this.redirectURIBuilder();
@@ -38,9 +40,27 @@ export class WalletService {
 
   async connectMetamaskWallet(): Promise<IWalletInfo> {
     try {
-      const pendingProvider = new ethers.providers.Web3Provider(
-        (window as any).ethereum
-      );
+      const apiMode = ConfigContext.getApiMode();
+      const network =
+        apiMode === ApiMode.PROD
+          ? ConfigContext.NETWORKS.matic
+          : ConfigContext.NETWORKS.maticmum;
+
+      if (!(window as any).ethereum) {
+        throw new Error('Metamask is not available');
+      }
+
+      const pendingProvider: ethers.providers.Web3Provider =
+        new ethers.providers.Web3Provider((window as any).ethereum);
+
+      const chainId = await pendingProvider.send('eth_chainId', []);
+
+      if (chainId !== Number(network.chainId).toString(16)) {
+        await pendingProvider.send('wallet_switchEthereumChain', [
+          { chainId: '0x' + Number(network.chainId).toString(16) },
+        ]);
+      }
+
       await pendingProvider.send('eth_requestAccounts', []);
       this.provider = pendingProvider;
 
@@ -191,5 +211,45 @@ export class WalletService {
       location: { href },
     } = window;
     return `${href}${!href.endsWith('/') ? '/' : ''}${url}`;
+  }
+
+  getProvider(): ethers.providers.Web3Provider {
+    return this.provider;
+  }
+
+  public changeMagiclinkNetwork(network: INetwork) {
+    this.magic = new Magic(MAGIC_LINK_API_KEY as string, {
+      locale: 'en_US',
+      network: {
+        rpcUrl: network.providerUrl,
+        chainId: network.chainId,
+      },
+      extensions: [new OAuthExtension()],
+    });
+  }
+
+  public requestMetamaskChangeNetwork(network: INetwork) {
+    return this.provider
+      .send('wallet_switchEthereumChain', [
+        { chainId: '0x' + Number(network.chainId).toString(16) },
+      ])
+      .catch(async (error) => {
+        if (error.code === 4902) {
+          await this.provider.send('wallet_addEthereumChain', [
+            {
+              chainId: '0x' + Number(network.chainId).toString(16),
+              chainName: 'Polygon Mumbai Testnet',
+              nativeCurrency: {
+                name: 'MATIC',
+                symbol: 'MATIC',
+                decimals: 18,
+              },
+              rpcUrls: ['https://rpc-mumbai.maticvigil.com/'],
+            },
+          ]);
+        } else {
+          throw error;
+        }
+      });
   }
 }

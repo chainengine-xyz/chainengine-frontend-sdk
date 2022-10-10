@@ -1,6 +1,9 @@
-import { ChainEngineSdk } from '@chainengine-sdk/front-end';
+import { ChainEngineSdk, ApiMode } from 'chainengine-frontend-sdk';
 
-const sdk = new ChainEngineSdk('9b45ddac-1714-4af6-addf-4406e2bb054c');
+const sdk = new ChainEngineSdk(
+  '9b45ddac-1714-4af6-addf-4406e2bb054c',
+  ApiMode.TEST
+);
 
 (async () => {
   if (sdk.isAuthenticatedOrPending()) {
@@ -11,6 +14,10 @@ const sdk = new ChainEngineSdk('9b45ddac-1714-4af6-addf-4406e2bb054c');
   const resultWallet = document.getElementById('resultWallet');
   const connectButton = document.getElementById('connectButton');
   const isUserAuthenticated = document.getElementById('isUserAuthenticated');
+  const currentApiMode = document.getElementById('currentApiMode');
+
+  // const toggleApiMode = document.getElementById('toggleApiMode');
+
   const logoutButton = document.getElementById('logout');
 
   const getWalletInfoButton = document.getElementById('walletInfo');
@@ -35,8 +42,28 @@ const sdk = new ChainEngineSdk('9b45ddac-1714-4af6-addf-4406e2bb054c');
     resultWallet!.innerHTML = String(sdk.isAuthenticatedOrPending());
   };
 
+  currentApiMode!.onclick = async () => {
+    resultWallet!.innerHTML = String(sdk.wallet.getApiMode());
+  };
+
+  // toggleApiMode!.onclick = async () => {
+  //   resultWallet!.innerHTML = 'Loading...';
+  //   sdk.wallet
+  //     .toggleApiMode()
+  //     .then(() => {
+  //       resultWallet!.innerHTML = 'Success!';
+  //     })
+  //     .catch(() => {
+  //       resultWallet!.innerHTML = 'Error';
+  //     });
+  // };
+
+  currentApiMode!.onclick = async () => {
+    resultWallet!.innerHTML = String(sdk.wallet.getApiMode());
+  };
+
   logoutButton!.onclick = async () => {
-    sdk.userLogout();
+    sdk.wallet.logout();
   };
 
   // NFT
@@ -101,12 +128,20 @@ const sdk = new ChainEngineSdk('9b45ddac-1714-4af6-addf-4406e2bb054c');
   // Marketplace
   const resultMarketplace = document.getElementById('resultMarketplace');
   const getListingsButton = document.getElementById('getListingsButton');
-  const getMyListingsButton = document.getElementById('getMyListingsButton');
-  const buyButton = document.getElementById('buyButton');
 
   getListingsButton!.onclick = async () => {
     sdk.marketplace
       .getListings()
+      .then((res) => (resultMarketplace!.innerHTML = JSON.stringify(res)));
+  };
+
+  const listingIdBuyButton = document.getElementById('listingIdBuyButton');
+  const listingIdBuyInput = <HTMLInputElement>(
+    document.getElementById('listingIdBuyInput')
+  );
+  listingIdBuyButton!.onclick = async () => {
+    sdk.marketplace
+      .buy(listingIdBuyInput!.value)
       .then((res) => (resultMarketplace!.innerHTML = JSON.stringify(res)));
   };
 })();

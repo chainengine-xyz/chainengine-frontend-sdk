@@ -1,5 +1,5 @@
 {
-  "name": "@chainengine-sdk/front-end",
+  "name": "chainengine-frontend-sdk",
   "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
@@ -19,12 +19,14 @@
     "@coinbase/wallet-sdk": "^3.0.4",
     "@magic-ext/oauth": "^3.0.0",
     "@magic-sdk/provider": "^9.0.0",
+    "@opensea/seaport-js": "^1.0.6",
     "@toruslabs/torus-embed": "^1.36.1",
     "@walletconnect/web3-provider": "^1.7.0",
-    "ethers": "5.5.4",
+    "ethers": "^5.7.1",
     "jsonwebtoken": "^8.5.1",
     "magic-sdk": "^9.1.0",
     "walletlink": "2.5.0",
+    "web3": "^1.8.0",
     "web3modal": "1.9.5"
   },
   "devDependencies": {

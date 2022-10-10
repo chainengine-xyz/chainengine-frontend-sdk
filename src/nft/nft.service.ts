@@ -1,5 +1,5 @@
 import { AuthContext } from '../AuthContext';
-import { ConfigContext } from '../ConfigContext';
+import { ConfigContext } from '../config/ConfigContext';
 import { apiRequest } from '../utils';
 import {
   NftResponseDto,

@@ -20,6 +20,12 @@
         <button id="isUserAuthenticated" style="margin-top: 18px">
           Is user Authenticated
         </button>
+        <!-- <button id="toggleApiMode" style="margin-top: 18px">
+          Toggle API mode
+        </button> -->
+        <button id="currentApiMode" style="margin-top: 18px">
+          Current API mode
+        </button>
         <button id="logout">Logout</button>
         <button id="walletInfo">Get Wallet Info</button>
       </div>
@@ -52,6 +58,10 @@
       <h2>Marketplace</h2>
       <div style="display: flex; flex-direction: column; gap: 12px">
         <button id="getListingsButton" style="flex: 1">Get Listings</button>
+        <div style="display: flex; gap: 12px">
+          <input id="listingIdBuyInput" placeholder="Listing Id" type="text" />
+          <button id="listingIdBuyButton" style="flex: 1">Buy listing</button>
+        </div>
         <!-- <button id="getMyListingsButton" style="flex: 1">
           Get My Listings
         </button>

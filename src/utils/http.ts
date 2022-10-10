@@ -1,3 +1,5 @@
+import { ApiMode } from '../chainengine.sdk';
+
 export interface FetchRequest {
   url: string;
   config?: RequestInit;
@@ -11,11 +13,6 @@ export interface Token {
   iat: number;
   exp: number;
   jwt: string;
-}
-
-export enum ApiMode {
-  PROD = 'mainnet',
-  TEST = 'testnet',
 }
 
 export class APIError extends Error {
